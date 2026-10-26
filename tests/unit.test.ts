@@ -90,3 +90,17 @@ it("devuelve null sin ventas y el producto con más unidades vendidas", () => {
   service.crearPedido(new Pedido("c", [{ productoId: "p2", cantidad: 4 }]));
   expect(service.getProductoMasVendido()).toEqual({ nombre: "Expreso Pocillo Brasil", cantidad: 5 });
 });
+
+it("inicia pendiente y permite las transiciones válidas", () => {
+  const pedido = new Pedido("ped1", []);
+  expect(pedido.getEstado()).toBe("pendiente");
+  pedido.setEstado("en preparación");
+  expect(pedido.getEstado()).toBe("en preparación");
+  pedido.setEstado("entregado");
+  expect(pedido.getEstado()).toBe("entregado");
+});
+
+it("rechaza una transición no permitida", () => {
+  const pedido = new Pedido("ped1", []);
+  expect(() => pedido.setEstado("entregado")).toThrow();
+});
