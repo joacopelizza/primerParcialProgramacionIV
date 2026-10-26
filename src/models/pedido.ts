@@ -29,3 +29,15 @@ export class Pedido {
     return { id: this._id, items: this._items.map(item => ({ ...item })), estado: this._estado };
   }
 }
+
+public setEstado(estado: string): void {
+  const transiciones: Record<string, string[]> = {
+    pendiente: ["en preparación"],
+    "en preparación": ["entregado"],
+    entregado: [],
+  };
+  if (!transiciones[this._estado]?.includes(estado)) {
+    throw new Error(`Transición de estado no permitida: ${this._estado} -> ${estado}`);
+  }
+  this._estado = estado;
+}
