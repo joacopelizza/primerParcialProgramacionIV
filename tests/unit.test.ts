@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Pedido } from "../src/models/pedido";
 import { Producto } from "../src/models/producto";
+import { Cafe } from "../src/models/cafe";
+import { Pasteleria } from "../src/models/pasteleria";
 
 class ProductoPrueba extends Producto {
   calcularPrecio(): number { return this.getPrecioBase(); }
@@ -55,3 +57,20 @@ describe("Pedido: cálculo del total", () => {
   });
 });
 
+describe("Cafe", () => {
+  it("suma precio base y gramos por precio por gramo", () => {
+    expect(new Cafe("c1", "Expreso", 2500, 18, 140).calcularPrecio()).toBe(5020);
+  });
+  it("incluye los datos propios en JSON", () => {
+    expect(new Cafe("c1", "Expreso", 2500, 18, 140).toJSON()).toMatchObject({
+      gramos: 18, precioPorGramo: 140, precio: 5020,
+    });
+  });
+});
+
+describe("Pasteleria", () => {
+  it("usa el precio base como precio final", () => {
+    const producto = new Pasteleria("p1", "Muffin", 2500);
+    expect(producto.calcularPrecio()).toBe(2500);
+  });
+});
