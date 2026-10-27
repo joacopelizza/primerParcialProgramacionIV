@@ -1,12 +1,79 @@
-it("rechaza pedidos sin ID, sin items o con items vacíos", async () => {
-  for (const body of [{ items: [{ productoId: "p1", cantidad: 1 }] }, { id: "x", items: "p1" }, { id: "x", items: [] }]) {
-    expect((await enviarPedido(body)).status).toBe(400);
-  }
-});
+import { AddressInfo } from "node:net";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { crearApp } from "../src/app";
+import { CafeteriaService } from "../src/services/cafeteriaService";
 
-it("rechaza producto inexistente y cantidades inválidas", async () => {
-  expect((await enviarPedido({ id: "x", items: [{ productoId: "no-existe", cantidad: 1 }] })).status).toBe(400);
-  for (const cantidad of [0, -1, 1.5]) {
-    expect((await enviarPedido({ id: "x", items: [{ productoId: "p1", cantidad }] })).status).toBe(400);
+describe("Validación de pedidos", () => {
+  const service = new CafeteriaService();
+  const app = crearApp(service);
+  let server: ReturnType<typeof app.listen>;
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    server = app.listen(0);
+    await new Promise<void>((resolve) => server.once("listening", resolve));
+    const address = server.address() as AddressInfo;
+    baseUrl = `http://127.0.0.1:${address.port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  });
+
+  async function enviarPedido(body: unknown): Promise<Response> {
+    return fetch(`${baseUrl}/pedidos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
   }
+
+  it("rechaza un pedido sin ID", async () => {
+    const response = await enviarPedido({ items: [{ productoId: "p1", cantidad: 1 }] });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Faltan datos obligatorios o el formato de items es incorrecto" });
+  });
+
+  it("rechaza items que no estén en un arreglo", async () => {
+    const response = await enviarPedido({ id: "pedido-items-invalidos", items: "p1" });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rechaza un pedido con items vacíos", async () => {
+    const response = await enviarPedido({ id: "pedido-vacio", items: [] });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rechaza un item que no incluye productoId", async () => {
+    const response = await enviarPedido({ id: "pedido-sin-producto", items: [{ cantidad: 1 }] });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Cada item debe incluir un productoId válido" });
+  });
+
+  it("rechaza un producto inexistente y no guarda el pedido", async () => {
+    const response = await enviarPedido({
+      id: "pedido-producto-inexistente",
+      items: [{ productoId: "no-existe", cantidad: 1 }],
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "El producto no existe: no-existe" });
+    expect(service.getPedidoById("pedido-producto-inexistente")).toBeUndefined();
+  });
+
+  it.each([0, -1, 1.5])("rechaza cantidades no positivas y no enteras: %s", async (cantidad) => {
+    const response = await enviarPedido({
+      id: `pedido-cantidad-${cantidad}`,
+      items: [{ productoId: "p1", cantidad }],
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "La cantidad debe ser un entero positivo" });
+  });
 });

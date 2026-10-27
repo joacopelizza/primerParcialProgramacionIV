@@ -15,7 +15,7 @@ describe("API de Cafetería Origen", () => {
     server = crearApp(service).listen(0);
     await new Promise<void>((resolve) => server.once("listening", resolve));
     const address = server.address() as AddressInfo;
-    baseUrl = http://127.0.0.1:${address.port};
+    baseUrl = `http://127.0.0.1:${address.port}`;
   });
 
   afterEach(async () => {
@@ -32,7 +32,7 @@ describe("API de Cafetería Origen", () => {
   });
 
   it("lista los 20 productos iniciales", async () => {
-    const response = await fetch(${baseUrl}/productos);
+    const response = await fetch(`${baseUrl}/productos`);
     const productos = await response.json();
 
     expect(response.status).toBe(200);
@@ -40,7 +40,7 @@ describe("API de Cafetería Origen", () => {
   });
 
   it("obtiene un producto existente por ID", async () => {
-    const response = await fetch(${baseUrl}/productos/c1);
+    const response = await fetch(`${baseUrl}/productos/c1`);
     const producto = await response.json();
 
     expect(response.status).toBe(200);
@@ -49,14 +49,14 @@ describe("API de Cafetería Origen", () => {
   });
 
   it("devuelve 404 para un producto inexistente", async () => {
-    const response = await fetch(${baseUrl}/productos/desconocido);
+    const response = await fetch(`${baseUrl}/productos/desconocido`);
 
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: "Producto no encontrado" });
   });
 
   it("crea un pedido válido y devuelve el total calculado", async () => {
-    const response = await fetch(${baseUrl}/pedidos, {
+    const response = await fetch(`${baseUrl}/pedidos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -81,7 +81,7 @@ describe("API de Cafetería Origen", () => {
       { productoId: "p1", cantidad: 1 },
     ]));
 
-    const response = await fetch(${baseUrl}/pedidos);
+    const response = await fetch(`${baseUrl}/pedidos`);
     const pedidos = await response.json();
 
     expect(response.status).toBe(200);
@@ -92,8 +92,44 @@ describe("API de Cafetería Origen", () => {
   it("obtiene un pedido existente por ID", async () => {
     service.crearPedido(new Pedido("pedido-buscar", [{ productoId: "p1", cantidad: 2 }]));
 
-    const response = await fetch(${baseUrl}/pedidos/pedido-buscar);
+    const response = await fetch(`${baseUrl}/pedidos/pedido-buscar`);
 
     expect(response.status).toBe(200);
     expect((await response.json()).id).toBe("pedido-buscar");
   });
+
+  it("devuelve 404 para un pedido inexistente", async () => {
+    const response = await fetch(`${baseUrl}/pedidos/no-existe`);
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Pedido no encontrado" });
+  });
+
+  it("devuelve la facturación total acumulada", async () => {
+    service.crearPedido(new Pedido("pedido-a", [{ productoId: "p1", cantidad: 2 }]));
+    service.crearPedido(new Pedido("pedido-b", [{ productoId: "p2", cantidad: 1 }]));
+
+    const response = await fetch(`${baseUrl}/reportes/facturacion`);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ facturacionTotal: 9200 });
+  });
+
+  it("devuelve el producto más vendido", async () => {
+    service.crearPedido(new Pedido("pedido-a", [{ productoId: "c1", cantidad: 3 }]));
+    service.crearPedido(new Pedido("pedido-b", [{ productoId: "c1", cantidad: 2 }]));
+    service.crearPedido(new Pedido("pedido-c", [{ productoId: "p2", cantidad: 6 }]));
+
+    const response = await fetch(`${baseUrl}/reportes/mas-vendido`);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ nombre: "Torta selva negra", cantidad: 6 });
+  });
+
+  it("devuelve 404 en el reporte de más vendido si aún no hay ventas", async () => {
+    const response = await fetch(`${baseUrl}/reportes/mas-vendido`);
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "No hay ventas registradas" });
+  });
+});
