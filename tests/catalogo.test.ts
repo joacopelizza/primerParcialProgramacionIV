@@ -1,36 +1,24 @@
-import { CafeteriaService } from "../src/services/cafeteriaService";
+import { describe, expect, it } from "vitest";
 import { Pasteleria } from "../src/models/pasteleria";
-import { Pedido } from "../src/models/pedido";
+import { CafeteriaService } from "../src/services/cafeteriaService";
 
-describe("CafeteriaService: catálogo y pedidos", () => {
-
-  // Este bloque de codigo cumple con la funcion de
-  // listar los productos del catalogo y buscar un producto por su ID.
-  it("lista productos y busca por ID", () => {
+describe("Catálogo de productos", () => {
+  it("carga 20 productos y permite buscar uno por ID", () => {
     const service = new CafeteriaService();
-    expect(service.getProductos().length).toBeGreaterThan(0);
+
+    expect(service.getProductos()).toHaveLength(20);
     expect(service.getProductoById("c1")?.getNombre()).toBe("Expreso Pocillo Brasil");
-    expect(service.getProductoById("ausente")).toBeUndefined();
   });
 
-  // Este bloque de codigo cumple con la funcion de
-  // agregar un producto al catalogo y luego consultar el mismo producto agregado.
+  it("devuelve undefined cuando el producto no existe", () => {
+    expect(new CafeteriaService().getProductoById("no-existe")).toBeUndefined();
+  });
 
-  it("agrega un producto al catálogo", () => {
+  it("permite agregar un producto nuevo al catálogo", () => {
     const service = new CafeteriaService();
     const producto = new Pasteleria("p3", "Alfajor", 900);
     service.agregarProducto(producto);
+
     expect(service.getProductoById("p3")).toBe(producto);
-  });
-
-
-  // Este bloque de codigo cumple con la funcion de
-  // registrar un pedido y luego consultar el mismo pedido registrado.
-  it("registra y consulta pedidos", () => {
-    const service = new CafeteriaService();
-    const pedido = new Pedido("ped1", [{ productoId: "p1", cantidad: 2 }]);
-    service.crearPedido(pedido);
-    expect(service.getPedidoById("ped1")).toBe(pedido);
-    expect(service.getPedidos()).toContain(pedido);
   });
 });
