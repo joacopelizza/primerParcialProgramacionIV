@@ -32,6 +32,30 @@ describe("API de Cafetería Origen", () => {
     expect(await response.text()).toContain("API de Cafetería Origen");
   });
 
+  it("permite solicitudes CORS desde el frontend local", async () => {
+    const response = await fetch(`${baseUrl}/productos`, {
+      headers: { Origin: "http://localhost:5173" },
+    });
+
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
+  });
+
+  it("responde solicitudes preflight CORS", async () => {
+    const response = await fetch(`${baseUrl}/pedidos`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: "http://localhost:5173",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+      },
+    });
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
+    expect(response.headers.get("access-control-allow-methods")).toContain("POST");
+    expect(response.headers.get("access-control-allow-headers")).toContain("content-type");
+  });
+
   it("lista los 20 productos iniciales", async () => {
     const response = await fetch(`${baseUrl}/productos`);
     const productos = await response.json();
