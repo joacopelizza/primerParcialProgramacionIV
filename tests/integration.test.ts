@@ -117,6 +117,67 @@ describe("API de Cafetería Origen", () => {
     expect(await response.json()).toEqual({ error: "Ruta no encontrada" });
   });
 
+  it("reinicia los pedidos y restaura el catálogo inicial en modo test", async () => {
+    service.crearPedido(new Pedido("pedido-para-reset", [
+      { productoId: "p1", cantidad: 1 },
+    ]));
+
+    const response = await fetch(`${baseUrl}/__test__/reset`, { method: "POST" });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ mensaje: "Estado reiniciado" });
+    expect(service.getProductos()).toHaveLength(20);
+    expect(service.getPedidos()).toHaveLength(0);
+    expect(service.getFacturacionTotal()).toBe(0);
+  });
+
+  it("carga una fixture reproducible en modo test", async () => {
+    const response = await fetch(`${baseUrl}/__test__/seed`, { method: "POST" });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      mensaje: "Datos de prueba cargados",
+      productos: 20,
+      pedidos: 2,
+    });
+    expect(service.getPedidos().map((pedido) => pedido.getId())).toEqual([
+      "pedido-test-1",
+      "pedido-test-2",
+    ]);
+    expect(service.getFacturacionTotal()).toBe(16740);
+
+    await fetch(`${baseUrl}/__test__/seed`, { method: "POST" });
+    expect(service.getPedidos()).toHaveLength(2);
+  });
+
+  it("no registra rutas de soporte fuera del modo test", async () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    let nonTestServer: Server | undefined;
+
+    try {
+      process.env.NODE_ENV = "development";
+      nonTestServer = crearApp(service).listen(0);
+    } finally {
+      if (originalNodeEnv === undefined) {
+        delete process.env.NODE_ENV;
+      } else {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
+    }
+
+    await new Promise<void>((resolve) => nonTestServer?.once("listening", resolve));
+    const address = nonTestServer?.address() as AddressInfo;
+    const response = await fetch(`http://127.0.0.1:${address.port}/__test__/reset`, {
+      method: "POST",
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Ruta no encontrada" });
+    await new Promise<void>((resolve, reject) => {
+      nonTestServer?.close((error) => (error ? reject(error) : resolve()));
+    });
+  });
+
   it("devuelve errores JSON para cuerpos JSON mal formados", async () => {
     const response = await fetch(`${baseUrl}/pedidos`, {
       method: "POST",
