@@ -66,24 +66,238 @@ La variable también se puede configurar en el entorno del servidor.
 
    docker run -p 3000:3000 cafeteria-origen
 
-## Endpoints de la API
+## Contrato de la API
+
+La API expone un contrato JSON con base en `http://localhost:3000` y responde siempre con contenido `application/json` salvo la ruta raíz, que devuelve texto plano.
+
+### Formato general
+
+- `Content-Type` esperado en requests con body: `application/json`
+- Errores estándar: `{ "error": "mensaje" }`
+- Códigos de estado comunes: `200`, `201`, `400`, `404`, `500`
+
+### Modelos de datos
+
+#### Producto
+
+```json
+{
+  "id": "c1",
+  "nombre": "Expreso Pocillo Brasil",
+  "precioBase": 2500,
+  "precio": 5020,
+  "tipo": "expreso"
+}
+```
+
+Los productos pueden ser de tipo `expreso`, `filtrado` o `pasteleria`. En el caso de cafés, la respuesta además incluye:
+
+```json
+{
+  "gramos": 140,
+  "precioPorGramo": 18
+}
+```
+
+#### Item de pedido
+
+```json
+{
+  "productoId": "c1",
+  "cantidad": 2
+}
+```
+
+#### Pedido
+
+```json
+{
+  "id": "pedido-001",
+  "items": [
+    { "productoId": "c1", "cantidad": 2 },
+    { "productoId": "p2", "cantidad": 1 }
+  ],
+  "estado": "pendiente",
+  "mesaId": "mesa-4"
+}
+```
+
+`mesaId` es opcional y, si se envía, debe seguir el formato `mesa-<número>`.
+
+### Endpoints de la API
 
 | Método | Endpoint | Descripción |
+| --- | --- | --- |
 | `GET` | `/productos` | Lista todos los productos |
 | `GET` | `/productos/:id` | Obtiene un producto por su ID |
-| `POST`| `/pedidos` | Crea un pedido (con `mesaId` opcional) y devuelve el total |
-| `GET` | `/pedidos` | Lista todos los pedidos |
+| `POST` | `/pedidos` | Crea un pedido y devuelve el total calculado |
+| `GET` | `/pedidos` | Lista todos los pedidos almacenados |
 | `GET` | `/pedidos/:id` | Obtiene un pedido por su ID, con estado, ítems y total |
 | `GET` | `/reportes/facturacion` | Devuelve el monto total facturado |
 | `GET` | `/reportes/mas-vendido` | Devuelve el producto más vendido |
-Las respuestas de productos incluyen `precio`, calculado mediante `calcularPrecio()`, y `tipo` (`expreso`, `filtrado` o `pasteleria`).
 
-Todas las respuestas de error usan el formato JSON `{ "error": "mensaje" }`.
+### Contrato detallado por endpoint
+
+#### `GET /productos`
+
+Respuesta exitosa: `200 OK`
+
+```json
+[
+  {
+    "id": "c1",
+    "nombre": "Expreso Pocillo Brasil",
+    "precioBase": 2500,
+    "precio": 5020,
+    "tipo": "expreso",
+    "gramos": 140,
+    "precioPorGramo": 18
+  }
+]
+```
+
+#### `GET /productos/:id`
+
+Respuesta exitosa: `200 OK`
+
+```json
+{
+  "id": "p1",
+  "nombre": "Muffin de chocolate",
+  "precioBase": 2500,
+  "precio": 2500,
+  "tipo": "pasteleria"
+}
+```
+
+Error: `404 Not Found`
+
+```json
+{ "error": "Producto no encontrado" }
+```
+
+#### `POST /pedidos`
+
+Request body requerido:
+
+```json
+{
+  "id": "pedido-001",
+  "items": [
+    { "productoId": "c1", "cantidad": 2 },
+    { "productoId": "p2", "cantidad": 1 }
+  ],
+  "estado": "pendiente",
+  "mesaId": "mesa-4"
+}
+```
+
+Validaciones:
+
+- `id` debe ser un string no vacío
+- `items` debe ser un array no vacío
+- cada item debe incluir `productoId` válido y `cantidad` entera positiva
+- `estado` es opcional y si se omite, se usa `"pendiente"`
+- `mesaId` es opcional y si se envía debe cumplir `mesa-<número>`
+
+Respuesta exitosa: `201 Created`
+
+```json
+{
+  "pedido": {
+    "id": "pedido-001",
+    "items": [
+      { "productoId": "c1", "cantidad": 2 },
+      { "productoId": "p2", "cantidad": 1 }
+    ],
+    "estado": "pendiente",
+    "mesaId": "mesa-4"
+  },
+  "total": 14240
+}
+```
+
+Errores posibles:
+
+```json
+{ "error": "Faltan datos obligatorios o el formato de items es incorrecto" }
+```
+
+```json
+{ "error": "El producto no existe: c999" }
+```
+
+```json
+{ "error": "La cantidad debe ser un entero positivo" }
+```
+
+#### `GET /pedidos`
+
+Respuesta exitosa: `200 OK`
+
+```json
+[
+  {
+    "id": "pedido-001",
+    "items": [
+      { "productoId": "c1", "cantidad": 2 }
+    ],
+    "estado": "pendiente",
+    "mesaId": "mesa-4"
+  }
+]
+```
+
+#### `GET /pedidos/:id`
+
+Respuesta exitosa: `200 OK`
+
+```json
+{
+  "id": "pedido-001",
+  "items": [
+    { "productoId": "c1", "cantidad": 2 },
+    { "productoId": "p2", "cantidad": 1 }
+  ],
+  "estado": "preparando",
+  "total": 10020
+}
+```
+
+Error: `404 Not Found`
+
+```json
+{ "error": "Pedido no encontrado" }
+```
+
+#### `GET /reportes/facturacion`
+
+Respuesta exitosa: `200 OK`
+
+```json
+{ "facturacionTotal": 9200 }
+```
+
+#### `GET /reportes/mas-vendido`
+
+Respuesta exitosa: `200 OK`
+
+```json
+{ "nombre": "Torta selva negra", "cantidad": 6 }
+```
+
+Si no hay ventas registradas, responde:
+
+```json
+{ "error": "No hay ventas registradas" }
+```
 
 ### Endpoints de prueba
 
 Solo cuando `NODE_ENV=test` se habilitan:
 
 | Método | Endpoint | Descripción |
+| --- | --- | --- |
 | `POST` | `/__test__/reset` | Restaura los 20 productos iniciales y elimina los pedidos |
 | `POST` | `/__test__/seed` | Reemplaza el estado actual por el catálogo inicial y dos pedidos de prueba reproducibles |
+
