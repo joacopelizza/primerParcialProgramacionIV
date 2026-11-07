@@ -15,15 +15,18 @@ describe("Modelos de productos", () => {
       nombre: "Muffin de vainilla",
       precioBase: 2500,
       precio: 2500,
+      tipo: "pasteleria",
     });
   });
 
   it("calcula el precio final de un café", () => {
     expect(new Cafe("c1", "Expreso", 2500, 18, 140).calcularPrecio()).toBe(5020);
+    expect(new Cafe("c1", "Expreso", 2500, 18, 140).toJSON().tipo).toBe("expreso");
   });
 
   it("calcula el precio final de un café filtrado", () => {
     expect(new Cafe("f1", "Filtrado", 3200, 15, 180).calcularPrecio()).toBe(5900);
+    expect(new Cafe("f1", "Filtrado", 3200, 15, 180).toJSON().tipo).toBe("filtrado");
   });
 
   it("recalcula el precio del café después de modificar sus gramos y precio por gramo", () => {

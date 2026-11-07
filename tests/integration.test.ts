@@ -1,3 +1,4 @@
+
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -37,6 +38,18 @@ describe("API de Cafetería Origen", () => {
 
     expect(response.status).toBe(200);
     expect(productos).toHaveLength(20);
+    expect(productos.find((producto: { id: string }) => producto.id === "c1")).toMatchObject({
+      precio: 5020,
+      tipo: "expreso",
+    });
+    expect(productos.find((producto: { id: string }) => producto.id === "f1")).toMatchObject({
+      precio: 4040,
+      tipo: "filtrado",
+    });
+    expect(productos.find((producto: { id: string }) => producto.id === "p1")).toMatchObject({
+      precio: 2500,
+      tipo: "pasteleria",
+    });
   });
 
   it("obtiene un producto existente por ID", async () => {
@@ -46,6 +59,24 @@ describe("API de Cafetería Origen", () => {
     expect(response.status).toBe(200);
     expect(producto.id).toBe("c1");
     expect(producto.nombre).toBe("Expreso Pocillo Brasil");
+    expect(producto.precio).toBe(5020);
+    expect(producto.tipo).toBe("expreso");
+  });
+
+  it("incluye precio calculado y tipo al buscar cada categoría por ID", async () => {
+    const productosEsperados = [
+      { id: "c1", precio: 5020, tipo: "expreso" },
+      { id: "f1", precio: 4040, tipo: "filtrado" },
+      { id: "p1", precio: 2500, tipo: "pasteleria" },
+    ];
+
+    for (const esperado of productosEsperados) {
+      const response = await fetch(`${baseUrl}/productos/${esperado.id}`);
+      const producto = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(producto).toMatchObject({ precio: esperado.precio, tipo: esperado.tipo });
+    }
   });
 
   it("devuelve 404 para un producto inexistente", async () => {
