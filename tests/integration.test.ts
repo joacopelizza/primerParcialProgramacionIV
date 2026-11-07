@@ -139,12 +139,23 @@ describe("API de Cafetería Origen", () => {
   });
 
   it("obtiene un pedido existente por ID", async () => {
-    service.crearPedido(new Pedido("pedido-buscar", [{ productoId: "p1", cantidad: 2 }]));
-
+      service.crearPedido(new Pedido("pedido-buscar", [
+      { productoId: "p1", cantidad: 2 },
+      { productoId: "c1", cantidad: 1 },
+    ], "preparando"));
+    
     const response = await fetch(`${baseUrl}/pedidos/pedido-buscar`);
 
     expect(response.status).toBe(200);
-    expect((await response.json()).id).toBe("pedido-buscar");
+    expect(await response.json()).toEqual({
+        id: "pedido-buscar",
+        estado: "preparando",
+        items: [
+          { productoId: "p1", cantidad: 2 },
+          { productoId: "c1", cantidad: 1 },
+        ],
+        total: 10020,
+    });
   });
 
   it("devuelve 404 para un pedido inexistente", async () => {

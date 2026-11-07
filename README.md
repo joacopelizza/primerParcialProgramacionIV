@@ -63,7 +63,7 @@ Ejecutá estos comandos desde la carpeta del proyecto, donde está `package.json
 | `GET` | `/productos/:id` | Obtiene un producto por su ID |
 | `POST`| `/pedidos` | Crea un pedido (con `mesaId` opcional) y devuelve el total |
 | `GET` | `/pedidos` | Lista todos los pedidos |
-| `GET` | `/pedidos/:id` | Obtiene un pedido por su ID |
+| `GET` | `/pedidos/:id` | Obtiene un pedido por su ID, con estado, ítems y total |
 | `GET` | `/reportes/facturacion` | Devuelve el monto total facturado |
 | `GET` | `/reportes/mas-vendido` | Devuelve el producto más vendido |
 Las respuestas de productos incluyen `precio`, calculado mediante `calcularPrecio()`, y `tipo` (`expreso`, `filtrado` o `pasteleria`).
