@@ -46,6 +46,16 @@ Ejecutá estos comandos desde la carpeta del proyecto, donde está `package.json
 
    Servidor disponible en: `http://localhost:3000`
 
+### CORS
+
+La API permite por defecto solicitudes desde `http://localhost:5173` (el puerto predeterminado de Vite). Para autorizar otros orígenes, como una lista de orígenes separados por comas, por ejemplo:
+
+```env
+CORS_ORIGIN=http://localhost:5173,http://localhost:5174
+```
+
+La variable también se puede configurar en el entorno del servidor.
+
 ### Ejecución con Docker
 
 1. **Construir la imagen**:
