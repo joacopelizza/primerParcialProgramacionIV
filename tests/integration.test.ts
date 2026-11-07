@@ -103,8 +103,26 @@ describe("API de Cafetería Origen", () => {
     expect(response.status).toBe(201);
     expect(body.pedido.id).toBe("pedido-valido");
     expect(body.pedido.estado).toBe("pendiente");
+    expect(body.pedido.mesaId).toBeUndefined();
     expect(body.total).toBe(14240);
     expect(service.getPedidoById("pedido-valido")).toBeDefined();
+  });
+
+  it("crea un pedido con mesaId y lo devuelve en la respuesta", async () => {
+    const response = await fetch(`${baseUrl}/pedidos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: "pedido-con-mesa",
+        mesaId: "mesa-4",
+        items: [{ productoId: "p1", cantidad: 1 }],
+      }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.pedido.mesaId).toBe("mesa-4");
+    expect(service.getPedidoById("pedido-con-mesa")?.toJSON().mesaId).toBe("mesa-4");
   });
 
   it("lista los pedidos guardados", async () => {
