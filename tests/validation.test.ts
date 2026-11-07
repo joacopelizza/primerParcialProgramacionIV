@@ -49,6 +49,30 @@ describe("Validación de pedidos", () => {
     expect(response.status).toBe(400);
   });
 
+    it("rechaza un mesaId que no sea un string no vacío", async () => {
+    const response = await enviarPedido({
+      id: "pedido-mesa-invalida",
+      mesaId: " ",
+      items: [{ productoId: "p1", cantidad: 1 }],
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "mesaId debe ser un string no vacío" });
+    expect(service.getPedidoById("pedido-mesa-invalida")).toBeUndefined();
+  });
+
+  it("rechaza un mesaId con formato inválido", async () => {
+    const response = await enviarPedido({
+      id: "pedido-mesa-formato-invalido",
+      mesaId: "mesa-cuatro",
+      items: [{ productoId: "p1", cantidad: 1 }],
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "mesaId debe tener el formato mesa-<número>" });
+    expect(service.getPedidoById("pedido-mesa-formato-invalido")).toBeUndefined();
+  });
+
   it("rechaza un item que no incluye productoId", async () => {
     const response = await enviarPedido({ id: "pedido-sin-producto", items: [{ cantidad: 1 }] });
 

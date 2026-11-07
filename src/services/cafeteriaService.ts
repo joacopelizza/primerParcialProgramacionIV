@@ -11,6 +11,12 @@ export class CafeteriaService {
     this.cargarProductosIniciales();
   }
 
+  public resetear(): void {
+    this._productos.clear();
+    this._pedidos.clear();
+    this.cargarProductosIniciales();
+  }
+
   private cargarProductosIniciales(): void {
     this.agregarProducto(new Cafe("c1", "Expreso Pocillo Brasil", 2500, 18, 140));
     this.agregarProducto(new Cafe("c2", "Expreso Pocillo Colombia", 2500, 18, 180));

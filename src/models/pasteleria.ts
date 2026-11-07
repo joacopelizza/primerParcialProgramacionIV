@@ -1,4 +1,4 @@
-import { Producto } from "./producto";
+import { Producto, TipoProducto } from "./producto";
 
 export class Pasteleria extends Producto {
   constructor(id: string, nombre: string, precioBase: number) {
@@ -7,5 +7,9 @@ export class Pasteleria extends Producto {
 
   public override calcularPrecio(): number {
     return this.getPrecioBase();
+  }
+
+  public getTipo(): TipoProducto {
+    return "pasteleria";
   }
 }
