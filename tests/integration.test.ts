@@ -86,6 +86,35 @@ describe("API de Cafetería Origen", () => {
     expect(await response.json()).toEqual({ error: "Producto no encontrado" });
   });
 
+  it("devuelve errores JSON para rutas inexistentes", async () => {
+    const response = await fetch(`${baseUrl}/ruta-inexistente`);
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Ruta no encontrada" });
+  });
+
+  it("devuelve errores JSON para cuerpos JSON mal formados", async () => {
+    const response = await fetch(`${baseUrl}/pedidos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{",
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: expect.any(String) });
+  });
+
+  it("devuelve errores JSON cuando ocurre un error interno", async () => {
+    service.getProductos = () => {
+      throw new Error("Fallo del servicio");
+    };
+
+    const response = await fetch(`${baseUrl}/productos`);
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ error: "Fallo del servicio" });
+  });
+
   it("crea un pedido válido y devuelve el total calculado", async () => {
     const response = await fetch(`${baseUrl}/pedidos`, {
       method: "POST",
