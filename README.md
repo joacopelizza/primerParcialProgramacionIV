@@ -79,3 +79,11 @@ La variable también se puede configurar en el entorno del servidor.
 Las respuestas de productos incluyen `precio`, calculado mediante `calcularPrecio()`, y `tipo` (`expreso`, `filtrado` o `pasteleria`).
 
 Todas las respuestas de error usan el formato JSON `{ "error": "mensaje" }`.
+
+### Endpoints de prueba
+
+Solo cuando `NODE_ENV=test` se habilitan:
+
+| Método | Endpoint | Descripción |
+| `POST` | `/__test__/reset` | Restaura los 20 productos iniciales y elimina los pedidos |
+| `POST` | `/__test__/seed` | Reemplaza el estado actual por el catálogo inicial y dos pedidos de prueba reproducibles |

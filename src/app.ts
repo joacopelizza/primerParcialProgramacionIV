@@ -4,6 +4,7 @@ import { CafeteriaService } from "./services/cafeteriaService";
 import { crearRutasProductos } from "./routes/productoRoutes";
 import { crearRutasPedidos } from "./routes/pedidoRoutes";
 import { crearRutasReportes } from "./routes/reporteRoutes";
+import { crearRutasTest } from "./routes/testRoutes";
 
 export function crearApp(service = new CafeteriaService()) {
   const app = express();
@@ -18,6 +19,9 @@ export function crearApp(service = new CafeteriaService()) {
   app.use("/productos", crearRutasProductos(service));
   app.use("/pedidos", crearRutasPedidos(service));
   app.use("/reportes", crearRutasReportes(service));
+  if (process.env.NODE_ENV === "test") {
+    app.use("/__test__", crearRutasTest(service));
+  }
   app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
   app.use(((error: unknown, _req, res, _next) => {
     const statusCode =
