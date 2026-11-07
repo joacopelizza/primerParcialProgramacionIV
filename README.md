@@ -61,7 +61,7 @@ Ejecutá estos comandos desde la carpeta del proyecto, donde está `package.json
 | Método | Endpoint | Descripción |
 | `GET` | `/productos` | Lista todos los productos |
 | `GET` | `/productos/:id` | Obtiene un producto por su ID |
-| `POST`| `/pedidos` | Crea un pedido y devuelve el total |
+| `POST`| `/pedidos` | Crea un pedido (con `mesaId` opcional) y devuelve el total |
 | `GET` | `/pedidos` | Lista todos los pedidos |
 | `GET` | `/pedidos/:id` | Obtiene un pedido por su ID |
 | `GET` | `/reportes/facturacion` | Devuelve el monto total facturado |
