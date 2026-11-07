@@ -13,6 +13,9 @@ export function crearRutasPedidos(service: CafeteriaService): Router {
     if (mesaId !== undefined && (typeof mesaId !== "string" || mesaId.trim().length === 0)) {
       return res.status(400).json({ error: "mesaId debe ser un string no vacío" });
     }
+    if (mesaId !== undefined && !/^mesa-\d+$/.test(mesaId)) {
+      return res.status(400).json({ error: "mesaId debe tener el formato mesa-<número>" });
+    }
 
     for (const item of items) {
       if (!item || typeof item !== "object" || Array.isArray(item) || typeof item.productoId !== "string" || item.productoId.trim().length === 0) {
