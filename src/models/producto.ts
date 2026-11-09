@@ -1,5 +1,3 @@
-export type TipoProducto = "expreso" | "filtrado" | "pasteleria";
-
 export abstract class Producto {
   private _id: string;
   private _nombre: string;
@@ -32,15 +30,13 @@ export abstract class Producto {
   }
   
   public abstract calcularPrecio(): number;
-  public abstract getTipo(): TipoProducto;
 
-  public toJSON(): { id: string; nombre: string; precioBase: number; precio: number; tipo: TipoProducto } {
+  public toJSON(): { id: string; nombre: string; precioBase: number; precio: number } {
     return { 
       id: this._id,
       nombre: this._nombre,
       precioBase: this._precioBase,
       precio: this.calcularPrecio(),
-      tipo: this.getTipo(),
     };
   }
 }
