@@ -9,13 +9,11 @@ export class Pedido {
   private _id: string;
   private _items: ItemPedido[];
   private _estado: string;
-  private _mesaId?: string;
 
-  constructor(id: string, items: ItemPedido[], estado: string = "pendiente", mesaId?: string) {
+  constructor(id: string, items: ItemPedido[], estado: string = "pendiente") {
     this._id = id;
     this._items = items;
     this._estado = estado;
-    this._mesaId = mesaId;
   }
 
   public getId(): string {
@@ -45,12 +43,11 @@ export class Pedido {
     return total;
   }
 
-  public toJSON(): { id: string; items: ItemPedido[]; estado: string; mesaId?: string } {
+  public toJSON(): { id: string; items: ItemPedido[]; estado: string } {
     return {
       id: this._id,
       items: this._items.map(item => ({ ...item })),
       estado: this._estado,
-      ...(this._mesaId !== undefined ? { mesaId: this._mesaId } : {}),
     };
   }
 }

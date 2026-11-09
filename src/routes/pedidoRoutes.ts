@@ -6,15 +6,9 @@ export function crearRutasPedidos(service: CafeteriaService): Router {
   const router = Router();
 
   router.post("/", (req: Request, res: Response) => {
-    const { id, items, estado, mesaId } = req.body;
+    const { id, items, estado } = req.body;
     if (typeof id !== "string" || id.trim().length === 0 || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "Faltan datos obligatorios o el formato de items es incorrecto" });
-    }
-    if (mesaId !== undefined && (typeof mesaId !== "string" || mesaId.trim().length === 0)) {
-      return res.status(400).json({ error: "mesaId debe ser un string no vacío" });
-    }
-    if (mesaId !== undefined && !/^mesa-\d+$/.test(mesaId)) {
-      return res.status(400).json({ error: "mesaId debe tener el formato mesa-<número>" });
     }
 
     for (const item of items) {
@@ -29,7 +23,7 @@ export function crearRutasPedidos(service: CafeteriaService): Router {
       }
     }
 
-    const pedido = new Pedido(id, items, estado, mesaId);
+    const pedido = new Pedido(id, items, estado);
     service.crearPedido(pedido);
     res.status(201).json({ pedido, total: pedido.calcularTotal(new Map(service.getProductos().map(p => [p.getId(), p]))) });
   });
@@ -38,10 +32,7 @@ export function crearRutasPedidos(service: CafeteriaService): Router {
   router.get("/:id", (req: Request, res: Response) => {
     const pedido = service.getPedidoById(req.params.id as string);
     if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
-        res.json({
-      ...pedido.toJSON(),
-      total: pedido.calcularTotal(new Map(service.getProductos().map(p => [p.getId(), p]))),
-    });;
+    res.json(pedido);
   });
 
   return router;
